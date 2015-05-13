@@ -1,0 +1,27 @@
+# -*- coding: utf-8 mode: change-log -*-
+2009-10-06    <mkrems@physics.ucsd.edu>
+	Version 0.2 Wishlist
+	* TODO add email notification system
+	* TODO add query/signal mode to facilitate email system
+	* TODO make complete unit tests using historical data
+	* TODO automatically generate config (stickerrc) file
+	* TODO make text nicer in charts
+	* TODO add more indicators
+	* TODO decide on reasonable chart_functions syntax and implement
+	
+2009-09-28    <mkrems@physics.ucsd.edu>
+	* TODO Look at matplotlib.setp function to rotate dates on chart (see Matplotlib user guide)
+	
+2009-09-27    <mkrems@physics.ucsd.edu>
+	* TODO use sharex option to plot volume on same graph as close with different y values
+	
+2009-09-26    <mkrems@physics.ucsd.edu>
+	* TODO: change all date structures in the code to datetime objects
+	
+2009-09-24    <mkrems@physics.ucsd.edu>
+	* TODO: if wrong date given in time_series class atuomatically push it to nearest valid date for certain functions
+
+
+
+
+	

@@ -1,0 +1,5 @@
+[STickerConfig]
+dpi           = 100
+name          = John Doe
+email         = johndoe@yourdomain.org
+mail_server   = smtp.yourdomain.org

@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 mode: python -*-
+
+# sticker - A stock market ticker
+#
+# Copyright (c) 2009, Heiko Appel, Matt Krems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301, USA.
+
+import getopt
+import sys
+import os
+import time
+import profile
+import pstats
+import sticker_core.add_yahoo_index
+import sticker_core.config_file
+import sticker_core.input_file
+import sticker_core.portfolio
+import sticker_core.symbol
+import sticker_core.trading_strategy
+
+# -----------------------------------------------------------
+def usage():
+    print "%s [opt]" % sticker_core.package_name
+    print
+    print "   -h             show this help message       "
+    print "   -v             verbose mode                 "
+    print "   -s YYYYMMDD    start date for data retrieval"
+    print "   -e YYYYMMDD    end date for data retrieval  "
+    print "   -b input_file  run backtest                 "
+    print "   -i             update index files           "
+    print "   -q             query mode                   "
+    print "   -m             send notification mails      "
+    print "   -a             add symbols to the database  "
+    print
+    print
+    print "%s %s - %s" % \
+          (sticker_core.package_name,
+           sticker_core.package_version,
+           sticker_core.package_copyright)
+
+
+# -----------------------------------------------------------
+def read_input_file(filename):
+    if not os.path.isfile(filename):
+        print 'Error could not find input file: ', filename
+        sys.exit()
+    # read input file
+    sticker_core.input_file.read_input_file(filename)
+
+
+# -----------------------------------------------------------
+def main():
+    # process command line options
+    try:
+        opts, args = \
+              getopt.gnu_getopt(sys.argv[1:], 'hvs:e:a:b:iq:m',
+                                ['help','verbose','start=','end=','add=',
+                                 'backtest'])
+    except getopt.GetoptError:
+        # print help information and exit:
+        usage()
+        sys.exit(2)
+
+    # also print help if no options are given
+    if opts == []: usage(); sys.exit()
+
+    # default values
+    start_date = sticker_core.def_start
+    end_date   = sticker_core.def_end
+
+    # read config file
+    sticker_core.config_file.read_config_file(sticker_core.sticker_dir + '/config')
+
+    for opt, arg in opts:
+        if opt in ('-v', '--verbose'):
+            sticker_core.verbose = True
+
+        elif opt in ('-s', '--start'):
+            start_date = arg
+
+        elif opt in ('-e','--end'):
+            end_date = arg
+
+        elif opt in ('-h', '--help'):
+            usage(); sys.exit()
+
+        elif opt in ('-a', '--add'):
+            symbol = sticker_core.symbol.Symbol(arg, start_date, end_date)
+
+        elif opt in ('-i', '--index'):
+            for index in sticker_core.stock_indices.keys():
+                print 'Updating index: ', index
+                sticker_core.add_yahoo_index.query_index(index , sticker_core.stock_indices[index])
+
+        elif opt in ('-b', '--backtest'):
+            read_input_file(arg)
+            # create list of trading strategies and run backtest
+            my_trading_strategies = sticker_core.trading_strategy.TradingStrategyList()
+            my_trading_strategies.run_backtest()
+
+        elif opt in ('-m', '--mail'):
+            sticker_core.send_email = True
+
+        elif opt in ('-q', '--query'):
+            read_input_file(arg)
+            # in query mode we run the backtest config with current date as trading_end
+            trading_end = time.strftime('%Y%m%d', time.localtime())
+            for key in sticker_core.input.keys():
+                if key[1] == 'trading_end':
+                    sticker_core.input[ key ] = trading_end
+            # create list of trading strategies and run backtest
+            my_trading_strategies = sticker_core.trading_strategy.TradingStrategyList()
+            my_trading_strategies.run_backtest()
+
+
+# -----------------------------------------------------------
+if __name__ == '__main__':
+    main()
+
+# -----------------------------------------------------------
+# uncomment to profile the program (comment main() above instead)
+#     profile.run('main()', 'profile.out')
+#     pout = pstats.Stats('profile.out')
+#     pout.sort_stats('time').print_stats(10)
